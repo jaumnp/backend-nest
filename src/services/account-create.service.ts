@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { string } from 'zod';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { hash } from 'bcrypt';
 
 interface IUserCreate {
   name: string;
@@ -20,11 +20,13 @@ export class AccountCreateService {
 
     if (emailExists) throw new ConflictException('User already exists!');
 
+    const passwordHashed = await hash(password, 10);
+
     await this.prisma.user.create({
       data: {
         name,
         email,
-        password,
+        password: passwordHashed,
       },
     });
 

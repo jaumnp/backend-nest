@@ -9,5 +9,6 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.test.ts'],
+    setupFiles: ['./tests/setup.vitest.ts'],
   },
 });

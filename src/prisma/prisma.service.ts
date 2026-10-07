@@ -1,17 +1,18 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
-import { env } from '../env/index.js';
+import { ConfigService } from '@nestjs/config';
+import { TEnv } from '../env/index.js';
 
 @Injectable()
 export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  constructor() {
+  constructor(configService: ConfigService<TEnv, true>) {
     super({
       adapter: new PrismaPg({
-        connectionString: env.DATABASE_URL,
+        connectionString: configService.get('DATABASE_URL', { infer: true }),
       }),
     });
   }
