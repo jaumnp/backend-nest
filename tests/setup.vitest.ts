@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/generated/prisma/client.js';
+import { PrismaClient } from '@/generated/prisma/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { execSync } from 'child_process';
 import { randomUUIDv7 } from 'crypto';
@@ -18,21 +18,23 @@ function generateUniqueDataBaseURL(schema: string) {
   return url.toString();
 }
 
-beforeAll(async () => {
-  const url = generateUniqueDataBaseURL(uuid);
+if (process.env.DATABASE_URL) {
+  beforeAll(async () => {
+    const url = generateUniqueDataBaseURL(uuid);
 
-  process.env.DATABASE_URL = url;
+    process.env.DATABASE_URL = url;
 
-  prisma = new PrismaClient({
-    adapter: new PrismaPg({
-      connectionString: process.env.DATABASE_URL,
-    }),
+    prisma = new PrismaClient({
+      adapter: new PrismaPg({
+        connectionString: process.env.DATABASE_URL,
+      }),
+    });
+
+    execSync(`npx prisma migrate deploy`);
   });
 
-  execSync(`npx prisma migrate deploy`);
-});
-
-afterAll(async () => {
-  await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${uuid} CASCADE`);
-  await prisma.$disconnect();
-});
+  afterAll(async () => {
+    await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${uuid} CASCADE`);
+    await prisma.$disconnect();
+  });
+}
