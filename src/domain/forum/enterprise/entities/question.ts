@@ -1,26 +1,26 @@
-import { Slug } from "./value-objects/slug.js";
-import type { UniqueEntityId } from "../../../../core/entities/unique-entity-id.js";
-import type { Optional } from "../../../../core/types/options.js";
-import { AggregateRoot } from "../../../../core/entities/aggregate-root.ts";
-import dayjs from "dayjs";
-import { QuestionAttachmentList } from "./question-attachment-list.ts";
+import { Slug } from './value-objects/slug.js';
+import type { UniqueEntityId } from '../../../../core/entities/unique-entity-id.js';
+import type { Optional } from '../../../../core/types/options.js';
+import { AggregateRoot } from '../../../../core/entities/aggregate-root.ts';
+import dayjs from 'dayjs';
+import { QuestionAttachmentList } from './question-attachment-list.ts';
 
 export interface IQuestionProps {
   authorId: UniqueEntityId;
-  bestAnswerId?: UniqueEntityId;
+  bestAnswerId?: UniqueEntityId | null;
   title: string;
   content: string;
   attachments: QuestionAttachmentList;
   slug: Slug;
   createdAt: Date;
-  updatedAt?: Date;
+  updatedAt?: Date | null;
 }
 
 export class Question extends AggregateRoot<IQuestionProps> {
   static create(
     props: Optional<
       IQuestionProps,
-      "createdAt" | "updatedAt" | "slug" | "attachments"
+      'createdAt' | 'updatedAt' | 'slug' | 'attachments'
     >,
     id?: UniqueEntityId,
   ) {
@@ -47,7 +47,10 @@ export class Question extends AggregateRoot<IQuestionProps> {
     return this.props.authorId;
   }
 
-  set bestAnswerId(bestAnswerId: UniqueEntityId) {
+  set bestAnswerId(bestAnswerId: UniqueEntityId | null | undefined) {
+    if (bestAnswerId && bestAnswerId !== this.props.bestAnswerId)
+      this.addDomainEvent();
+
     this.props.bestAnswerId = bestAnswerId;
     this.touch();
   }
@@ -65,14 +68,14 @@ export class Question extends AggregateRoot<IQuestionProps> {
   }
 
   set content(text: string) {
-    if (text.length > 2400) throw new Error("Invalid content lenght!");
+    if (text.length > 2400) throw new Error('Invalid content lenght!');
 
     this.props.content = text;
     this.touch();
   }
 
   set title(text: string) {
-    if (text.length > 120) throw new Error("Invalid content lenght!");
+    if (text.length > 120) throw new Error('Invalid content lenght!');
 
     this.props.title = text;
     this.props.slug = Slug.createFromText(text);
@@ -88,11 +91,11 @@ export class Question extends AggregateRoot<IQuestionProps> {
   }
 
   get excerpt() {
-    return this.props.content.substring(0, 120).trimEnd().concat("...");
+    return this.props.content.substring(0, 120).trimEnd().concat('...');
   }
 
   get isNew(): boolean {
-    return dayjs().diff(this.createdAt, "days") <= 3;
+    return dayjs().diff(this.createdAt, 'days') <= 3;
   }
 
   get createdAt() {
